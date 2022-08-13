@@ -1,24 +1,23 @@
+# -*- coding: UTF-8  -*-
+from copy import deepcopy
 from unittest import TestCase
-from unittest.mock import patch, Mock, ANY
+from unittest.mock import patch, Mock
 
 from vk_api.bot_longpoll import VkBotMessageEvent
 
+import settings
 from chat_bot import VkBot
 
 
 class ChatTests(TestCase):
-    RAW_EVENT = {'group_id': 102260837, 'type': 'message_new', 'event_id': '0a844246825213d6a2e28e7dbedfae1bfa6c0c03',
-                 'v': '5.131',
+    RAW_EVENT = {'group_id': 102260837,
+                 'type': 'message_new',
                  'object': {
-                     'message':
-                         {'date': 1658042320, 'from_id': 83083975, 'id': 81, 'out': 0, 'attachments': [],
-                          'conversation_message_id': 81, 'fwd_messages': [], 'important': False, 'is_hidden': False,
-                          'peer_id': 83083975, 'random_id': 0, 'text': 'привет'},
-                     'client_info':
-                         {'button_actions': ['text', 'vkpay', 'open_app', 'location', 'open_link', 'callback',
-                                             'intent_subscribe', 'intent_unsubscribe'],
-                          'keyboard': True, 'inline_keyboard': True, 'carousel': True, 'lang_id': 0}
-                            }
+                     'message': {'date': 1658042320, 'from_id': 83083975, 'id': 81, 'out': 0, 'attachments': [],
+                                 'conversation_message_id': 81, 'fwd_messages': [], 'important': False,
+                                 'is_hidden': False,
+                                 'peer_id': 83083975, 'random_id': 0, 'text': 'привет'}
+                 }
                  }
 
     def test_act(self):
@@ -38,21 +37,49 @@ class ChatTests(TestCase):
         bot.processing_event.assert_any_call({})
         assert bot.processing_event.call_count == count
 
-    def test_processing_event(self):
-        event = VkBotMessageEvent(raw=self.RAW_EVENT)
+    INPUTS = [
+        'Привет',
+        'А когда?',
+        'Где будет конференция?',
+        'Зарегистрируй меня',
+        'Вениамин',
+        'мой адрес email@email',
+        'email@email.ru'
+    ]
+
+    EXPECTED_OUTPUTS = [
+        settings.DEFAULT_ANSWER,
+        settings.INTENTS[0]['answer'],
+        settings.INTENTS[1]['answer'],
+        settings.SCENARIOS['registration']['steps']['step1']['text'],
+        settings.SCENARIOS['registration']['steps']['step2']['text'],
+        settings.SCENARIOS['registration']['steps']['step2']['failure_text'],
+        settings.SCENARIOS['registration']['steps']['step3']['text'].format(name='Вениамин', email='email@email.ru')
+    ]
+
+    def test_run_ok(self):
         send_mock = Mock()
+        api_mock = Mock()
+        api_mock.messages.send = send_mock
 
-        with patch('chat_bot.VkApi'):
-            with patch('chat_bot.bot_longpoll.VkBotLongPoll'):
-                bot = VkBot('', '')
-                bot.api = Mock()
-                bot.api_method.messages.send = send_mock
+        events = []
+        for input_text in self.INPUTS:
+            event = deepcopy(self.RAW_EVENT)
+            event['object']['text'] = input_text
+            events.append(VkBotMessageEvent(event))
 
-                bot.processing_event(event)
+        long_poller_mock = Mock()
+        long_poller_mock.listen = Mock(return_value=events)
 
-        send_mock.assert_called_once_with(
-                                     message='Все говорят ' + self.RAW_EVENT['object']['message']['text'] +
-                                             ', а ты купи слона',
-                                     user_id=self.RAW_EVENT['object']['message']['from_id'],
-                                     random_id=ANY
-                                            )
+        with patch('chat_bot.bot_longpoll.VkBotLongPoll', return_value=long_poller_mock):
+            bot = VkBot('', '')
+            bot.api = api_mock
+            bot.act()
+
+        assert send_mock.call_count == len(self.INPUTS)
+
+        real_outputs = []
+        for call in send_mock.call_args_list:
+            args, kwargs = call
+            real_outputs.append(kwargs['message'])
+        assert real_outputs == self.EXPECTED_OUTPUTS
