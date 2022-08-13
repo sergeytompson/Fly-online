@@ -9,7 +9,7 @@ from logging_config import log_config
 import settings
 
 logging.config.dictConfig(log_config)
-log = logging.getLogger('chat_bot')
+log = logging.getLogger("chat_bot")
 
 
 class UserState:
@@ -21,7 +21,6 @@ class UserState:
 
 
 class VkBot:
-
     def __init__(self, vk_token, group_id):
         self.api = VkApi(token=vk_token)
         self.group_id = group_id
