@@ -65,7 +65,7 @@ class ChatTests(TestCase):
         events = []
         for input_text in self.INPUTS:
             event = deepcopy(self.RAW_EVENT)
-            event['object']['text'] = input_text
+            event['object']['message']['text'] = input_text
             events.append(VkBotMessageEvent(event))
 
         long_poller_mock = Mock()
@@ -73,7 +73,7 @@ class ChatTests(TestCase):
 
         with patch('chat_bot.bot_longpoll.VkBotLongPoll', return_value=long_poller_mock):
             bot = VkBot('', '')
-            bot.api = api_mock
+            bot.api_method = api_mock
             bot.act()
 
         assert send_mock.call_count == len(self.INPUTS)
