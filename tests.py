@@ -2,11 +2,19 @@
 from copy import deepcopy
 from unittest import TestCase
 from unittest.mock import patch, Mock
-
+from pony.orm import db_session, rollback
 from vk_api.bot_longpoll import VkBotMessageEvent
-
+from generate_ticket import generate_ticket
 import settings
 from chat_bot import VkBot
+
+
+def isolate_db(func):
+    def wrapper(*args, **kwargs):
+        with db_session:
+            func(*args, **kwargs)
+            rollback()
+    return wrapper
 
 
 class ChatTests(TestCase):
@@ -31,7 +39,8 @@ class ChatTests(TestCase):
             with patch('chat_bot.bot_longpoll.VkBotLongPoll', return_value=long_poller_listen_mock):
                 bot = VkBot('', '')
                 bot.processing_event = Mock()
-                bot.act()
+                bot.send_img = Mock()
+                bot.run()
 
         bot.processing_event.assert_called()
         bot.processing_event.assert_any_call({})
@@ -57,6 +66,7 @@ class ChatTests(TestCase):
         settings.SCENARIOS['registration']['steps']['step3']['text'].format(name='Вениамин', email='email@email.ru')
     ]
 
+    @isolate_db
     def test_run_ok(self):
         send_mock = Mock()
         api_mock = Mock()
@@ -74,7 +84,8 @@ class ChatTests(TestCase):
         with patch('chat_bot.bot_longpoll.VkBotLongPoll', return_value=long_poller_mock):
             bot = VkBot('', '')
             bot.api_method = api_mock
-            bot.act()
+            bot.send_img = Mock()
+            bot.run()
 
         assert send_mock.call_count == len(self.INPUTS)
 
