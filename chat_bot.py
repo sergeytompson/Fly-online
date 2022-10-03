@@ -43,8 +43,8 @@ class VkBot:
             log.info(f'Мы пока не умеем обрабатывать события типа {event.type}')
             return
         # TODO у event.object может и не быть атрибута message
-        user_id = event.object.message['from_id']
-        text = event.object.message['text'].lower()
+        user_id = event.message['from_id']
+        text = event.message['text'].lower()
         state = UserState.get(user_id=str(user_id))
         if state is not None:
             self.continue_scenario(text, state, user_id)
