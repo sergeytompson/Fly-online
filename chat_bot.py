@@ -42,9 +42,13 @@ class VkBot:
         if event.type != bot_longpoll.VkBotEventType.MESSAGE_NEW:
             log.info(f'Мы пока не умеем обрабатывать события типа {event.type}')
             return
-        # TODO у event.object может и не быть атрибута message
-        user_id = event.message['from_id']
-        text = event.message['text'].lower()
+        _, api_version = event.raw['v'].split('.')
+        if int(api_version) >= 103:
+            user_id = event.object.message['from_id']
+            text = event.object.message['text'].lower()
+        else:
+            user_id = getattr(event.object, 'peer_id')
+            text = getattr(event.object, 'text')
         state = UserState.get(user_id=str(user_id))
         if state is not None:
             self.continue_scenario(text, state, user_id)
