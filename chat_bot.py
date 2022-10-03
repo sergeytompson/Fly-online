@@ -42,6 +42,7 @@ class VkBot:
         if event.type != bot_longpoll.VkBotEventType.MESSAGE_NEW:
             log.info(f'Мы пока не умеем обрабатывать события типа {event.type}')
             return
+        # TODO у event.object может и не быть атрибута message
         user_id = event.object.message['from_id']
         text = event.object.message['text'].lower()
         state = UserState.get(user_id=str(user_id))
