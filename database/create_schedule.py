@@ -14,7 +14,9 @@ def entering_the_schedule(schedule: list) -> None:
     today = datetime.date(now.year, now.month, now.day)
     for departure_city, arrival_city, date_corrector, flight_number in schedule:
         date = today + date_corrector
-        FlightSchedule(departure_city=departure_city,
-                       arrival_city=arrival_city,
-                       departure_date=date,
-                       flight_number=flight_number)
+        FlightSchedule(
+            departure_city=departure_city,
+            arrival_city=arrival_city,
+            departure_date=date,
+            flight_number=flight_number
+        )

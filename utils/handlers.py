@@ -66,6 +66,17 @@ def handle_confirmation(text: str, choices: str, context: dict) -> bool:
 
 
 def handle_name(text: str, choices: str, context: dict) -> bool:
+    """
+    вкусовщина, но я бы сделал так:
+
+    result = False
+    if re.search(re_name, text):
+        context['name'] = text.title()
+        result = True
+    return result
+
+
+    """
     if re.search(re_name, text):
         context['name'] = text.title()
         return True

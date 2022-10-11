@@ -93,15 +93,22 @@ class VkBot:
         step = scenario['steps'][first_step]
         choices = getattr(choice_makers, step['choice_maker'])()
         self.send_text(choices, user_id)
-        UserState(user_id=str(user_id), scenario_name=scenario_name, step_name=first_step, choices=choices.lower(),
-                  context={})
+        # TODO - choice в твоем варианте очень контекстно зависимый и может меняться с течением времени,
+        #  лучше такое не сохранять, а каждый раз стучаться в БД
+        UserState(
+            user_id=str(user_id),
+            scenario_name=scenario_name,
+            step_name=first_step, choices=choices.lower(),
+            context={}
+        )
         self.send_step(step, user_id, context={})
 
     def send_text(self, text_to_send: str, user_id: int) -> None:
-        self.api_method.messages.send(message=text_to_send,
-                                      user_id=user_id,
-                                      random_id=randint(0, 2 ** 20)
-                                      )
+        self.api_method.messages.send(
+            message=text_to_send,
+            user_id=user_id,
+            random_id=randint(0, 2 ** 20)
+        )
 
     def send_img(self, image: BytesIO, user_id: int) -> None:
         upload_url = self.api_method.photos.getMessagesUploadServer()['upload_url']
@@ -110,10 +117,11 @@ class VkBot:
         owner_id = image_data[0]['owner_id']
         media_id = image_data[0]['id']
         attachment = f'photo{owner_id}_{media_id}'
-        self.api_method.messages.send(attachment=attachment,
-                                      user_id=user_id,
-                                      random_id=randint(0, 2 ** 20)
-                                      )
+        self.api_method.messages.send(
+            attachment=attachment,
+            user_id=user_id,
+            random_id=randint(0, 2 ** 20)
+        )
 
     def send_step(self, step, user_id: int, context: dict) -> None:
         if 'text' in step:
@@ -128,6 +136,8 @@ class VkBot:
 
         handler = getattr(handlers, step['handler'])
         if handler(text=text.lower(), choices=state.choices, context=state.context):
+            # TODO хардкод говорит о плохо проработанной архитектуре
+            #  здесь напрашивается обработчик для шага/шагов
             if state.step_name == 'step7' and 'нет' in text.lower():
                 state.delete()
                 self.start_scenario(state.scenario_name, user_id)
@@ -141,7 +151,8 @@ class VkBot:
                              'С датой вылета {departure_date}\n'
                              'Из {departure_city}\n'
                              'В {arrival_city}\n'
-                             'Количество мест - {number_of_seats}'.format(**state.context))
+                             'Количество мест - {number_of_seats}'.format(**state.context)
+                             )
                     state.delete()
                 if next_step['choice_maker']:
                     choices = getattr(choice_makers, next_step['choice_maker'])(context=state.context)
