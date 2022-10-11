@@ -13,7 +13,7 @@ log_config = {
         "file_bot_handler": {
             "class": "logging.FileHandler",
             "formatter": "file_bot_formatter",
-            "filename": "chat_bot.log",
+            "filename": "bot_log/chat_bot.log",
             "encoding": "UTF-8",
             "level": "DEBUG",
         },
