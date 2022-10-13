@@ -6,7 +6,7 @@ from pony.orm import db_session, select
 import datetime
 
 
-def departure_city_choice_maker() -> str:
+def departure_city_choice_maker(context: dict) -> str:
     with db_session:
         departure_cities = select(c.departure_city for c in FlightSchedule)[:]
     choices = 'Города, из которых летают наши самолеты:\n'

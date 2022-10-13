@@ -1,17 +1,19 @@
 # -*- coding: UTF-8  -*-
 
+import logging.config
 from io import BytesIO
 from random import randint
-from utils.generate_ticket import generate_ticket
+
 import requests
-from vk_api import bot_longpoll, VkApi
-import logging.config
-from database.models import UserState
-from utils import handlers, choice_makers
-from bot_log.logging_config import log_config
-import settings
 from pony.orm import db_session
+from vk_api import bot_longpoll, VkApi
+
+import settings
+from bot_log.logging_config import log_config
 from database.create_schedule import entering_the_schedule
+from database.models import UserState
+from utils import handlers, choice_makers, post_handlers
+from utils.generate_ticket import generate_ticket
 
 '''Use Python 3.9+'''
 
@@ -29,6 +31,7 @@ class VkBot:
         self.api_method = self.api.get_api()
         self.api_version_map = {(0, 103): self._get_attr_from_api_before_5_103,
                                 (103, float('inf')): self._get_attr_from_api_after_5_103}
+        self.choices = ''
 
     def run(self):
         for event in self.vk_bot.listen():
@@ -91,16 +94,14 @@ class VkBot:
         scenario = settings.SCENARIOS[scenario_name]
         first_step = scenario['first_step']
         step = scenario['steps'][first_step]
-        choices = getattr(choice_makers, step['choice_maker'])()
-        self.send_text(choices, user_id)
-        # TODO - choice в твоем варианте очень контекстно зависимый и может меняться с течением времени,
-        #  лучше такое не сохранять, а каждый раз стучаться в БД
-        UserState(
+        state = UserState(
             user_id=str(user_id),
             scenario_name=scenario_name,
-            step_name=first_step, choices=choices.lower(),
+            step_name=first_step,
             context={}
         )
+        self.choices = getattr(choice_makers, step['choice_maker'])(state.context)
+        self.send_text(self.choices, user_id)
         self.send_step(step, user_id, context={})
 
     def send_text(self, text_to_send: str, user_id: int) -> None:
@@ -134,30 +135,34 @@ class VkBot:
         steps = settings.SCENARIOS[state.scenario_name]['steps']
         step = steps[state.step_name]
 
+        if not self.choices:
+            if step['choice_maker']:
+                self.choices = getattr(choice_makers, step['choice_maker'])(context=state.context)
+
         handler = getattr(handlers, step['handler'])
-        if handler(text=text.lower(), choices=state.choices, context=state.context):
-            # TODO хардкод говорит о плохо проработанной архитектуре
-            #  здесь напрашивается обработчик для шага/шагов
-            if state.step_name == 'step7' and 'нет' in text.lower():
-                state.delete()
-                self.start_scenario(state.scenario_name, user_id)
+        if handler(text=text.lower(), choices=self.choices.lower(), context=state.context):
+
+            if step['post_handler']:
+                post_handler = getattr(post_handlers, step['post_handler'])
+                if post_handler(self.start_scenario, user_id, text=text.lower(), state=state):
+                    return
+
+            next_step = steps[step['next_step']]
+            if next_step['next_step']:
+                state.step_name = step['next_step']
             else:
-                next_step = steps[step['next_step']]
-                if next_step['next_step']:
-                    state.step_name = step['next_step']
-                else:
-                    log.info('Зарегистрирован - {name}\n'
-                             'На рейс - {flight_number}\n'
-                             'С датой вылета {departure_date}\n'
-                             'Из {departure_city}\n'
-                             'В {arrival_city}\n'
-                             'Количество мест - {number_of_seats}'.format(**state.context)
-                             )
-                    state.delete()
-                if next_step['choice_maker']:
-                    choices = getattr(choice_makers, next_step['choice_maker'])(context=state.context)
-                    state.choices = choices.lower()
-                    self.send_text(choices, user_id)
-                self.send_step(next_step, user_id, state.context)
+                log.info('Зарегистрирован - {name}\n'
+                         'На рейс - {flight_number}\n'
+                         'С датой вылета {departure_date}\n'
+                         'Из {departure_city}\n'
+                         'В {arrival_city}\n'
+                         'Количество мест - {number_of_seats}'.format(**state.context)
+                         )
+                state.delete()
+            if next_step['choice_maker']:
+                self.choices = getattr(choice_makers, next_step['choice_maker'])(context=state.context)
+                self.choices = self.choices
+                self.send_text(self.choices, user_id)
+            self.send_step(next_step, user_id, state.context)
         else:
             self.send_text(step['failure_text'], user_id)

@@ -12,7 +12,6 @@ class UserState(db.Entity):
     user_id = Required(str, unique=True)
     scenario_name = Required(str)
     step_name = Required(str)
-    choices = Required(str)
     context = Required(Json)
 
 

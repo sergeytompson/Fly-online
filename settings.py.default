@@ -30,6 +30,7 @@ SCENARIOS = {
                 'failure_text': 'Из указанного города самолеты не отправляются. Попробуйте еще раз',
                 'choice_maker': 'departure_city_choice_maker',
                 'handler': 'handle_departure_city',
+                'post_handler': None,
                 'next_step': 'step2'
             },
             'step2': {
@@ -37,6 +38,7 @@ SCENARIOS = {
                 'failure_text': 'В указанный город рейсов нет, попробуйте еще раз',
                 'choice_maker': 'arrival_city_choice_maker',
                 'handler': 'handle_arrival_city',
+                'post_handler': None,
                 'next_step': 'step3'
             },
             'step3': {
@@ -45,6 +47,7 @@ SCENARIOS = {
                                 'другую дату.',
                 'choice_maker': 'date_choice_maker',
                 'handler': 'handle_date',
+                'post_handler': None,
                 'next_step': 'step4'
             },
             'step4': {
@@ -52,6 +55,7 @@ SCENARIOS = {
                 'failure_text': 'На выбранном маршруте нету указанного рейса. Попробуйте еще раз',
                 'choice_maker': 'flight_number_choice_maker',
                 'handler': 'handle_flight_number',
+                'post_handler': None,
                 'next_step': 'step5'
             },
             'step5': {
@@ -59,6 +63,7 @@ SCENARIOS = {
                 'failure_text': 'Неверные данные, попробуйте еще раз',
                 'choice_maker': None,
                 'handler': 'handle_number_of_seats',
+                'post_handler': None,
                 'next_step': 'step6'
             },
             'step6': {
@@ -66,6 +71,7 @@ SCENARIOS = {
                 'failure_text': 'Слишком длинный комментарий',
                 'choice_maker': None,
                 'handler': 'handle_comment',
+                'post_handler': None,
                 'next_step': 'step7'
             },
             'step7': {
@@ -80,6 +86,7 @@ SCENARIOS = {
                 'failure_text': 'Неверные данные, ответьте "да" или "нет"',
                 'choice_maker': None,
                 'handler': 'handle_confirmation',
+                'post_handler': 'confirm_post_handler',
                 'next_step': 'step8'
             },
             'step8': {
@@ -87,6 +94,7 @@ SCENARIOS = {
                 'failure_text': 'Неверные данные, укажите информацию на русском языке',
                 'choice_maker': None,
                 'handler': 'handle_name',
+                'post_handler': None,
                 'next_step': 'step9'
             },
             'step9': {
@@ -95,6 +103,7 @@ SCENARIOS = {
                 'choice_maker': None,
                 'failure_text': None,
                 'handler': None,
+                'post_handler': None,
                 'next_step': None
             },
         }
