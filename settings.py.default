@@ -1,109 +1,49 @@
-# -*- coding: UTF-8  -*-
-import datetime
-from utils.generate_ticket import COMMENT_THIRD_STRING_LEN
-
 TOKEN = ''
 GROUP_ID = 0
 
 INTENTS = [
     {
-        'name': 'Приветствие',
-        'tokens': ('привет', 'здоров', 'здраст'),
+        'name': 'Дата проведения',
+        'tokens': ('когда', 'сколько', 'дат'),
         'scenario': None,
-        'answer': 'Добрый день. Вас приветствует бот бронирования авиабилетов компании SeregaAirlines. '
-                  'Для начала бронирования введите /ticket'
+        'answer': 'Конференция проводится 15-го апреля в 10 часов утра'
     },
     {
-        'name': 'Бронирование билета',
-        'tokens': ('/ticket', 'ticket', 'билет', 'бронир'),
-        'scenario': 'booking',
+        'name': 'Место проведения',
+        'tokens': ('где', 'место', 'локац', 'адрес'),
+        'scenario': None,
+        'answer': 'Конференция пройдет в павильоне 18Г в Экспоцентре'
+    },
+    {
+        'name': 'Регистрация',
+        'tokens': ('регист', 'добав'),
+        'scenario': 'registration',
         'answer': None
     }
 ]
 
 SCENARIOS = {
-    'booking': {
+    'registration': {
         'first_step': 'step1',
         'steps': {
             'step1': {
-                'text': 'Введите название города вылета',
-                'failure_text': 'Из указанного города самолеты не отправляются. Попробуйте еще раз',
-                'choice_maker': 'departure_city_choice_maker',
-                'handler': 'handle_departure_city',
-                'post_handler': None,
+                'text': 'Чтобы зарегистрироваться, введите ваше имя',
+                'failure_text': 'Имя должно состоять из 3-30 букв и дефиса. Попробуйте еще раз',
+                'handler': 'handle_name',
                 'next_step': 'step2'
             },
             'step2': {
-                'text': 'Введите название города прилета',
-                'failure_text': 'В указанный город рейсов нет, попробуйте еще раз',
-                'choice_maker': 'arrival_city_choice_maker',
-                'handler': 'handle_arrival_city',
-                'post_handler': None,
+                'text': 'Введите email, мы отправим на него все данные',
+                'failure_text': 'Во введенном адресе ошибка, попробуйте еще раз',
+                'handler': 'handle_email',
                 'next_step': 'step3'
             },
             'step3': {
-                'text': 'Введите дату вылета в формате ГГГГ-ММ-ДД',
-                'failure_text': 'Формат даты не верный, либо на указанную дату рейсов по направлению нет. Попробуйте '
-                                'другую дату.',
-                'choice_maker': 'date_choice_maker',
-                'handler': 'handle_date',
-                'post_handler': None,
-                'next_step': 'step4'
-            },
-            'step4': {
-                'text': 'Введите номер рейса',
-                'failure_text': 'На выбранном маршруте нету указанного рейса. Попробуйте еще раз',
-                'choice_maker': 'flight_number_choice_maker',
-                'handler': 'handle_flight_number',
-                'post_handler': None,
-                'next_step': 'step5'
-            },
-            'step5': {
-                'text': 'Введите количество мест, которые необходимо забронировать',
-                'failure_text': 'Неверные данные, попробуйте еще раз',
-                'choice_maker': None,
-                'handler': 'handle_number_of_seats',
-                'post_handler': None,
-                'next_step': 'step6'
-            },
-            'step6': {
-                'text': f'Укажите комментарий к заказу (не более {COMMENT_THIRD_STRING_LEN} знаков с пробелами)',
-                'failure_text': 'Слишком длинный комментарий',
-                'choice_maker': None,
-                'handler': 'handle_comment',
-                'post_handler': None,
-                'next_step': 'step7'
-            },
-            'step7': {
-                'text': 'Проверьте правильность информации:\n'
-                        '    Город вылета - {departure_city}\n'
-                        '    Город прилета - {arrival_city}\n'
-                        '    Дата вылета - {departure_date}\n'
-                        '    Номер рейса - {flight_number}\n'
-                        '    Количество мест - {number_of_seats}\n'
-                        '    Комментарий - {comment}\n'
-                        'Отправьте "да", если информация верна, или "нет", если информация не верна',
-                'failure_text': 'Неверные данные, ответьте "да" или "нет"',
-                'choice_maker': None,
-                'handler': 'handle_confirmation',
-                'post_handler': 'confirm_post_handler',
-                'next_step': 'step8'
-            },
-            'step8': {
-                'text': 'Введите имя и фамилию человека, на которого бронируются билеты',
-                'failure_text': 'Неверные данные, укажите информацию на русском языке',
-                'choice_maker': None,
-                'handler': 'handle_name',
-                'post_handler': None,
-                'next_step': 'step9'
-            },
-            'step9': {
-                'text': 'Спасибо за регистрацию, {name}! Ваш билет ниже. Распечатайте его.',
+                'text': 'Спасибо за регистрацию, {name}! Ваш билет ниже. Копию мы отправили на {email}. '
+                        'Распечатайте его.',
                 'image': 'generate_ticket_handler',
-                'choice_maker': None,
                 'failure_text': None,
                 'handler': None,
-                'post_handler': None,
                 'next_step': None
             },
         }
@@ -111,7 +51,7 @@ SCENARIOS = {
 }
 
 DEFAULT_ANSWER = 'Не знаю как на это ответить.\n' \
-                 'Для начала бронирования введите /ticket'
+                 'Могу сказать когда и где пройдет конференция и зарегистрировать вас. Просто спросите'
 
 DB_CONFIG = dict(
     provider='postgres',
@@ -120,39 +60,3 @@ DB_CONFIG = dict(
     host='localhost',
     database='vk_chat_bot'
 )
-
-FLIGHT_SCHEDULE = [
-    ['Москва', 'Санкт-Петербург', datetime.timedelta(days=0), 'SA541'],
-    ['Санкт-Петербург', 'Москва', datetime.timedelta(days=1), 'SA542'],
-    ['Казань', 'Москва', datetime.timedelta(days=2), 'SA641'],
-    ['Москва', 'Казань', datetime.timedelta(days=3), 'SA642'],
-    ['Казань', 'Санкт-Петербург', datetime.timedelta(days=4), 'SA741'],
-    ['Санкт-Петербург', 'Казань', datetime.timedelta(days=5), 'SA742'],
-    ['Санкт-Петербург', 'Нижнекамск', datetime.timedelta(days=6), 'SA242'],
-    ['Нижнекамск', 'Санкт-Петербург', datetime.timedelta(days=7), 'SA241'],
-    ['Москва', 'Оренбург', datetime.timedelta(days=8), 'SA931'],
-    ['Оренбург', 'Москва', datetime.timedelta(days=9), 'SA932'],
-    ['Санкт-Петербург', 'Грозный', datetime.timedelta(days=10), 'SA573'],
-    ['Грозный', 'Санкт-Петербург', datetime.timedelta(days=11), 'SA574'],
-    ['Воронеж', 'Нижнекамск', datetime.timedelta(days=12), 'SA673'],
-    ['Нижнекамск', 'Воронеж', datetime.timedelta(days=13), 'SA674'],
-    ['Омск', 'Томск', datetime.timedelta(days=14), 'SA735'],
-    ['Томск', 'Тверь', datetime.timedelta(days=15), 'SA736'],
-    ['Тверь', 'Калининград', datetime.timedelta(days=16), 'SA123'],
-    ['Калининград', 'Владивосток', datetime.timedelta(days=17), 'SA666'],
-    ['Санкт-Петербург', 'Нижнекамск', datetime.timedelta(days=18), 'SA242'],
-    ['Санкт-Петербург', 'Нижнекамск', datetime.timedelta(days=18), 'SA862'],
-    ['Нижнекамск', 'Санкт-Петербург', datetime.timedelta(days=19), 'SA241'],
-    ['Нижнекамск', 'Санкт-Петербург', datetime.timedelta(days=19), 'SA861'],
-    ['Москва', 'Курган', datetime.timedelta(days=20), 'SA638'],
-    ['Курган', 'Москва', datetime.timedelta(days=21), 'SA639'],
-    ['Лондон', 'Париж', datetime.timedelta(days=22), 'SA941'],
-    ['Пекин', 'Токио', datetime.timedelta(days=23), 'SA121'],
-    ['Нижний Волочек', 'Верхний Волочек', datetime.timedelta(days=24), 'SA321'],
-    ['Верхний Волочек', 'Нижний Волочек', datetime.timedelta(days=25), 'SA322'],
-    ['Астана', 'Кишенев', datetime.timedelta(days=26), 'SA461'],
-    ['Астрахань', 'Калуга', datetime.timedelta(days=27), 'SA983'],
-    ['Калуга', 'Астрахань', datetime.timedelta(days=28), 'SA984'],
-    ['Ижевск', 'Екатеринбург', datetime.timedelta(days=29), 'SA426'],
-    ['Ектеринбург', 'Ижевск', datetime.timedelta(days=30), 'SA427']
-]
