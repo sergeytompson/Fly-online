@@ -44,8 +44,8 @@ class ChatTests(TestCase):
         long_poller_listen_mock = Mock()
         long_poller_listen_mock.listen = long_poller_mock
 
-        with patch('chat_bot.VkApi'):
-            with patch('chat_bot.bot_longpoll.VkBotLongPoll', return_value=long_poller_listen_mock):
+        with patch('app.chat_bot.VkApi'):
+            with patch('app.chat_bot.bot_longpoll.VkBotLongPoll', return_value=long_poller_listen_mock):
                 bot = VkBot('', 0)
                 bot.processing_event = Mock()
                 bot.send_img = Mock()
@@ -102,7 +102,7 @@ class ChatTests(TestCase):
     EXPECTED_OUTPUTS = [
         settings.DEFAULT_ANSWER,
         settings.INTENTS[0]['answer'],
-        departure_city_choice_maker(),
+        departure_city_choice_maker({}),
         settings.SCENARIOS['booking']['steps']['step1']['text'],
         arrival_city_choice_maker(INPUTS_CHOICES),
         settings.SCENARIOS['booking']['steps']['step2']['text'],
@@ -115,7 +115,7 @@ class ChatTests(TestCase):
         settings.SCENARIOS['booking']['steps']['step6']['text'],
         settings.SCENARIOS['booking']['steps']['step6']['failure_text'],
         settings.SCENARIOS['booking']['steps']['step7']['text'].format(**INPUTS_CHOICES, comment='Бизнес-класс'),
-        departure_city_choice_maker(),
+        departure_city_choice_maker({}),
         settings.SCENARIOS['booking']['steps']['step1']['text'],
         arrival_city_choice_maker(INPUTS_CHOICES),
         settings.SCENARIOS['booking']['steps']['step2']['text'],
@@ -145,7 +145,7 @@ class ChatTests(TestCase):
         long_poller_mock = Mock()
         long_poller_mock.listen = Mock(return_value=events)
 
-        with patch('chat_bot.bot_longpoll.VkBotLongPoll', return_value=long_poller_mock):
+        with patch('app.chat_bot.bot_longpoll.VkBotLongPoll', return_value=long_poller_mock):
             bot = VkBot('', 0)
             bot.api_method = api_mock
             bot.send_img = Mock()
